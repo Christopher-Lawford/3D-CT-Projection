@@ -1,7 +1,7 @@
 import bpy
 import random, time, math
 class cl_mto(bpy.types.Operator):
-    bl_idname = "wm.rpb_mto"
+    bl_idname = "wm.cl_mto"
     bl_label = "cl modal timer camera operation"
     limits =bpy.props.IntProperty(default = 0)
     _timer = None
