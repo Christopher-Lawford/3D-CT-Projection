@@ -1,0 +1,189 @@
+import bpy
+import random, time, math
+class rpb_mto(bpy.types.Operator):
+    bl_idname = "wm.rpb_mto"
+    bl_label = "rpb modal timer camera operation"
+    limits =bpy.props.IntProperty(default = 0)
+    _timer = None
+    n=0
+    x=0
+    y=0
+    z=0
+    locx1 = 0
+    locy1 = 0
+    locz1 = 0
+    averageamount = 10
+    oldlocationsx = []
+    oldlocationsy = []
+    oldlocationsz = []   
+    loop = 0 
+    def HideCube(self):
+        '''hides camera'''
+        bpy.data.objects['Cube'].hide = True
+        
+    def CameraClip(self): 
+        '''sets end limit for camera clip'''
+        bpy.data.cameras['Camera'].clip_end = 22. 
+        
+    def ReadingAngleValues(self):
+        '''opens and reads the angle values in degrees from the file AngleValues.txt'''
+        f = open(self.a + "AngleValues27.txt", 'r')
+        try:
+            data = [line.strip() for line in f]
+            self.x = float(data[self.n + 0])
+            self.y = float(data[self.n + 1])
+            self.z = float(data[self.n + 2])
+            
+        except IndexError:
+            self.x=self.x
+            self.y=self.y
+            self.z=self.z
+            self.n = self.n-3
+    
+    def Check_values(self):
+        '''creates and appends the angle values to the file AngleValueschecking to be viewed by user to congfirm correct input'''
+        f = open(self.a + "AngleValueschecking.txt", 'a')
+        s = str(self.oldlocationsx)+" "+str(self.oldlocationsy)+' '+str(self.oldlocationsz)+' '+str(self.n)
+        f.write(s+'\n')
+        f.close()
+        
+    def DegreestoRadians(self):
+        '''converts the angle values from degrees to radians as blender wants this as input'''
+        self.x = math.radians(self.x)
+        self.y = math.radians(self.y)
+        self.z = math.radians(self.z)
+        #self.x = float(self.x) + math.pi/2   #this is used to check rotation values to correct rotation axis
+
+    #def tf(self):
+     #   '''selects camera and inputs the rotation values'''
+     #   c = bpy.data.objects["Camera"]
+     #   c.rotation_mode = "XYZ"
+     #   q = c.rotation_euler
+    #    q.x = self.x
+      #  q.y = self.y
+      #  q.z = self.z
+        
+    def OldValues(self):
+        '''sets the old location values to a tempoary value for averageing'''
+        self.oldlocationsx.append(self.locx)
+        self.oldlocationsy.append(self.locy)
+        self.oldlocationsz.append(self.locz)
+        #self.locx1 = self.locx
+        #self.locy1 = self.locy
+        #self.locz1 = self.locz
+        
+    def averagingcameralocations(self):
+        '''function aims to smooth the camera values from the kinect'''
+        sumnumbersx = []
+        sumnumbersy = []
+        sumnumbersz = []
+        if self.n > self.averageamount*3:
+            #for j in range(self.averageamount+1):
+            #    sumnumbersx.append(self.oldlocationsx[j])
+            #    sumnumbersy.append(self.oldlocationsy[j])
+            #    sumnumbersz.append(self.oldlocationsz[j])
+            #self.locx = sum(sumnumbersx)/self.averageamount
+            #self.locy = sum(sumnumbersy)/self.averageamount
+            #self.locz = sum(sumnumbersz)/self.averageamount
+            self.locx = sum(self.oldlocationsx)/self.averageamount
+            self.locy = sum(self.oldlocationsy)/self.averageamount
+            self.locz = sum(self.oldlocationsz)/self.averageamount
+            del self.oldlocationsx[0]
+            del self.oldlocationsy[0]
+            del self.oldlocationsz[0]
+        else:
+            pass
+        
+    def CameraLock(self):
+        '''Selects the camera to be the active object (for bpy.ops to work) then adds the constraint of the camera has to be looking at the (cube)'''
+        bpy.context.scene.objects.active = bpy.data.objects["Camera"]
+        #bpy.ops.object.select_pattern(pattern="Camera")
+        bpy.ops.object.constraint_add(type='TRACK_TO')
+        c = bpy.data.objects["Camera"].constraints["Track To"]
+        c.target = bpy.data.objects["Cube"]
+        c.track_axis = "TRACK_NEGATIVE_Z"
+        c.up_axis = "UP_Y"
+        
+    def calculatelocation(self):
+        '''using trigonometry to place the camera at the correct location on a circle with radius x'''
+        self.locx = 20 * math.sin(self.z)
+        self.locz = 20 * math.sin(self.x)
+        self.locy = 20 * math.cos(self.y)
+        
+    def setlocation(self):
+        '''selects the camera and inputs the location values'''
+        c = bpy.data.objects["Camera"]
+        q = c.location
+        q.x = self.locx
+        q.y = self.locy
+        q.z = self.locz
+       
+    def modal(self, context, event):
+        if event.type in {'RIGHTMOUSE', 'ESC'} or self.limits > 30:
+            self.limits = 0
+            self.cancel(context)
+            return {'FINISHED'}
+        if event.type == "TIMER":
+            self.ReadingAngleValues()
+            self.DegreestoRadians()
+            self.calculatelocation()
+            self.OldValues()
+            #self.averagingcameralocations()
+            self.setlocation()
+            #self.tf()
+            self.Check_values()
+            
+            self.n += 3 
+        return {'PASS_THROUGH'}
+    
+    def execute(self, context):
+        wm = context.window_manager
+        self._timer = wm.event_timer_add(time_step=0.2, window=context.window)
+        wm.modal_handler_add(self)
+        self.a="D:\\Documents\\3rd year\\IP\\New folder\\FaceBasics-D2D\\"
+        #self.a = "H:\\third year\\IP project\\"
+        self.b = "Mandible+Nose 1"
+        self.CameraLock()
+        self.HideCube()
+        self.CameraClip()
+        bpy.ops.import_mesh.stl(filepath=self.a+self.b+".stl", axis_forward='-Y', axis_up='Z', global_scale=0.05, use_scene_unit=True, use_facet_normal=False)
+        bpy.ops.object.origin_set(type='ORIGIN_GEOMETRY')
+        d = bpy.data.objects[self.b].location
+        d.x = 0
+        d.y = 0
+        d.z = 0
+        return {'RUNNING_MODAL'}          
+    
+    def cancel(self, context):
+        wm = context.window_manager
+        wm.event_timer_remove(self._timer)
+        
+def register():
+    bpy.utils.register_class(cl_mto)
+    
+def unregister():
+    bpy.utils.unregister_class(cl_mto)
+    
+if __name__=="__main__":
+    register()
+    bpy.ops.wm.cl_mto()
+
+#c = bpy.data.objects["Camera"]
+#
+#def camera_move():
+#    rotmode = c.rotation_mode
+#    c.rotation_mode = "QUATERNION"
+#    q = c.rotation_quaternion
+#    q.x = 2*random.random()-1
+#    q.y = 2*random.random()-1
+#    q.z = 2*random.random()-1
+#    q.w = 2*random.random()-1
+    
+    # clean up
+    
+#    c.rotation_mode = rotmode
+
+#for i in range(10):
+#    camera_move()
+#    time.sleep(0.5)
+#banana
