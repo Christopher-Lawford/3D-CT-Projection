@@ -1,0 +1,82 @@
+import bpy
+import random, time
+n=0
+class cl_mto(bpy.types.Operator):
+    bl_idname = "wm.cl_mto"
+    bl_label = "cl modal timer camera operation"
+    limits =bpy.props.IntProperty(default = 0)
+    _timer = None
+    def file(self):
+        f = open("D:\\Documents\\3rd year\\IP\\New folder\\FaceBasics-D2D\\QuaternionValues.txt", 'r')
+        data = [line.strip() for line in f]
+        global x
+        global y
+        global z
+        global w  
+        
+        x = float(data[n + 0])
+        y = float(data[n + 1])
+        z = float(data[n + 2])
+        w = float(data[n + 3])
+        return x, y, z, w
+    
+    def tf(self):
+        '''This is where we're doing the timer operation'''
+        c = bpy.data.objects["Camera"]
+        c.rotation_mode = "QUATERNION"
+        q = c.rotation_quaternion
+        q.x = x
+        q.y = y
+        q.z = z
+        q.w = w
+    
+    def modal(self, context, event):
+        if event.type in {'RIGHTMOUSE', 'ESC'} or self.limits > 30:
+            self.limits = 0
+            self.cancel(context)
+            return {'FINISHED'}
+        if event.type == "TIMER":
+            global n 
+            n = 4 + n
+            self.file()
+            self.tf()
+        return {'PASS_THROUGH'}
+    
+    def execute(self, context):
+        wm = context.window_manager
+        self._timer = wm.event_timer_add(time_step=0.05, window=context.window)
+        wm.modal_handler_add(self)
+        return {'RUNNING_MODAL'}          
+    
+    def cancel(self, context):
+        wm = context.window_manager
+        wm.event_timer_remove(self._timer)
+        
+def register():
+    bpy.utils.register_class(cl_mto)
+    
+def unregister():
+    bpy.utils.unregister_class(cl_mto)
+    
+if __name__=="__main__":
+    register()
+    bpy.ops.wm.cl_mto()
+
+#c = bpy.data.objects["Camera"]
+#
+#def camera_move():
+#    rotmode = c.rotation_mode
+#    c.rotation_mode = "QUATERNION"
+#    q = c.rotation_quaternion
+#    q.x = 2*random.random()-1
+#    q.y = 2*random.random()-1
+#    q.z = 2*random.random()-1
+#    q.w = 2*random.random()-1
+    
+    # clean up
+    
+#    c.rotation_mode = rotmode
+
+#for i in range(10):
+#    camera_move()
+#    time.sleep(0.5)
