@@ -1,5 +1,5 @@
 /// <summary>
-/// Converts rotation quaternion to Euler angles 
+/// Converts rotation quaternion to Euler angles and outputs the values to a text file.
 /// And then maps them to a specified range of values to control the refresh rate
 /// </summary>
 /// <param name="pQuaternion">face rotation quaternion</param>
