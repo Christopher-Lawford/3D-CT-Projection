@@ -82,8 +82,8 @@ class cl_mto(bpy.types.Operator):
         wm = context.window_manager
         self._timer = wm.event_timer_add(time_step=.1, window=context.window)
         wm.modal_handler_add(self)
-        self.a="D:\\Documents\\3rd year\\IP\\New folder\\FaceBasics-D2D\\"
-        #self.a = "H:\\third year\\IP project\\"
+        self.a=""
+        #self.a = ""
         #self.CameraLock()
         #bpy.ops.import_mesh.stl(filepath=a+"", axis_forward='Y', axis_up='Z', filter_glob="*.stl", files=None, directory="", global_scale=1.0, use_scene_unit=True, use_facet_normal=False)
 
