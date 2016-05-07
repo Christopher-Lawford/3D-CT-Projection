@@ -1,6 +1,6 @@
 # 3D-CT-Projection
 
-To use this system you will need a projector and a Microsoft Kinect V2. Videos of the system working will be uploaded on the 6/5/2016
+To use this system you will need a projector and a Microsoft Kinect V2. Videos of the system working have been uploaded to youtube  https://youtu.be/CblwQ_7rkwg, https://youtu.be/2RDMXVu-7zU, https://youtu.be/zoEbOB9PBnQ, https://youtu.be/0IMvV6TI7EY
 
 The required software to run the software is Blender, Microsoft's SDK 2.0 and Visual studio basic which are free to download from:
 https://www.blender.org/download/
